@@ -1,164 +1,149 @@
-// ================================
-// 🌐 CONFIGURACIÓN GLOBAL
-// ================================
-const API_URL = "https://gestor-eventos-backend-84mx.onrender.com/api"; 
-// ⬆️ Usa la URL EXACTA de tu backend en Render
+// ===============================
+// main.js - Gestor de Eventos
+// ===============================
+const API_URL = "https://gestor-eventos-backend-84mx.onrender.com/api";
 
-// ================================
-// 🎯 FUNCIONES CRUD DE EVENTOS
-// ================================
-const eventForm = document.getElementById("event-form");
-const eventsList = document.getElementById("events-list");
-const eventTemplate = document.getElementById("event-template");
+// Referencias DOM
+const form = document.getElementById("event-form");
+const list = document.getElementById("events-list");
+const template = document.getElementById("event-template");
 const registerSection = document.getElementById("register-section");
 const registerForm = document.getElementById("register-form");
 const cancelRegister = document.getElementById("cancel-register");
 
-let editingEventId = null;
+let editId = null;
 
-// ✅ Cargar eventos al iniciar
-document.addEventListener("DOMContentLoaded", loadEvents);
-
-// ================================
-// 🔹 Cargar todos los eventos
-// ================================
-async function loadEvents() {
+// ===============================
+// Cargar eventos
+// ===============================
+async function cargarEventos() {
   try {
     const res = await fetch(`${API_URL}/events`);
-    const data = await res.json();
-    renderEvents(data);
-  } catch (error) {
-    console.error("❌ Error cargando eventos:", error);
+    if (!res.ok) throw new Error("Error al obtener eventos");
+    const eventos = await res.json();
+    renderEventos(eventos);
+  } catch (err) {
+    console.error("❌ Error cargando eventos:", err);
   }
 }
 
-// ================================
-// 🔹 Mostrar eventos en la lista
-// ================================
-function renderEvents(events) {
-  eventsList.innerHTML = "";
-
-  if (!events.length) {
-    eventsList.innerHTML = "<p>No hay eventos registrados.</p>";
-    return;
-  }
-
-  events.forEach(event => {
-    const clone = eventTemplate.content.cloneNode(true);
-    clone.querySelector(".title").textContent = event.title;
-    clone.querySelector(".meta").textContent = `${event.date} — ${event.location}`;
-    clone.querySelector(".view").addEventListener("click", () => alert(event.description));
-    clone.querySelector(".register").addEventListener("click", () => openRegisterForm(event._id));
-    clone.querySelector(".edit").addEventListener("click", () => editEvent(event));
-    clone.querySelector(".delete").addEventListener("click", () => deleteEvent(event._id));
-    eventsList.appendChild(clone);
+// ===============================
+// Renderizar eventos
+// ===============================
+function renderEventos(eventos) {
+  list.innerHTML = "";
+  eventos.forEach(ev => {
+    const li = template.content.cloneNode(true);
+    li.querySelector(".title").textContent = ev.title;
+    li.querySelector(".meta").textContent = `${ev.date?.split("T")[0]} | ${ev.location}`;
+    li.querySelector(".view").onclick = () => alert(ev.description);
+    li.querySelector(".register").onclick = () => mostrarFormularioRegistro(ev._id);
+    li.querySelector(".edit").onclick = () => editarEvento(ev);
+    li.querySelector(".delete").onclick = () => eliminarEvento(ev._id);
+    list.appendChild(li);
   });
 }
 
-// ================================
-// 🔹 Crear o editar un evento
-// ================================
-eventForm.addEventListener("submit", async (e) => {
+// ===============================
+// Guardar evento (crear o editar)
+// ===============================
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
-  const formData = new FormData(eventForm);
-  const eventData = Object.fromEntries(formData.entries());
+  const nuevoEvento = {
+    title: form.title.value.trim(),
+    date: form.date.value,
+    time: form.time.value,
+    location: form.location.value.trim(),
+    description: form.description.value.trim(),
+  };
 
   try {
-    let res;
-    if (editingEventId) {
-      res = await fetch(`${API_URL}/events/${editingEventId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(eventData),
-      });
-      editingEventId = null;
-    } else {
-      res = await fetch(`${API_URL}/events`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(eventData),
-      });
-    }
+    const method = editId ? "PUT" : "POST";
+    const url = editId ? `${API_URL}/events/${editId}` : `${API_URL}/events`;
 
-    if (res.ok) {
-      eventForm.reset();
-      loadEvents();
-      alert("✅ Evento guardado correctamente");
-    } else {
-      alert("❌ Error al guardar el evento");
-    }
-  } catch (error) {
-    console.error("❌ Error guardando evento:", error);
+    const res = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(nuevoEvento),
+    });
+
+    if (!res.ok) throw new Error("Error al guardar evento");
+    alert(editId ? "Evento actualizado ✅" : "Evento guardado ✅");
+    form.reset();
+    editId = null;
+    cargarEventos();
+  } catch (err) {
+    console.error("❌ Error guardando evento:", err);
+    alert("Error al guardar el evento. Verifica tu conexión con el servidor.");
   }
 });
 
-// ================================
-// 🔹 Editar evento
-// ================================
-function editEvent(event) {
-  eventForm.title.value = event.title;
-  eventForm.date.value = event.date;
-  eventForm.time.value = event.time || "";
-  eventForm.location.value = event.location || "";
-  eventForm.description.value = event.description || "";
-  editingEventId = event._id;
+// ===============================
+// Editar evento
+// ===============================
+function editarEvento(ev) {
+  editId = ev._id;
+  form.title.value = ev.title;
+  form.date.value = ev.date.split("T")[0];
+  form.time.value = ev.time || "";
+  form.location.value = ev.location;
+  form.description.value = ev.description;
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-// ================================
-// 🔹 Eliminar evento
-// ================================
-async function deleteEvent(id) {
-  if (!confirm("¿Seguro que deseas eliminar este evento?")) return;
-
+// ===============================
+// Eliminar evento
+// ===============================
+async function eliminarEvento(id) {
+  if (!confirm("¿Eliminar este evento?")) return;
   try {
     const res = await fetch(`${API_URL}/events/${id}`, { method: "DELETE" });
-    if (res.ok) {
-      loadEvents();
-      alert("🗑️ Evento eliminado correctamente");
-    } else {
-      alert("❌ Error al eliminar el evento");
-    }
-  } catch (error) {
-    console.error("❌ Error eliminando evento:", error);
+    if (!res.ok) throw new Error("Error al eliminar");
+    alert("Evento eliminado ✅");
+    cargarEventos();
+  } catch (err) {
+    console.error("❌ Error eliminando evento:", err);
   }
 }
 
-// ================================
-// 🔹 Formulario de registro de participante
-// ================================
-function openRegisterForm(eventId) {
+// ===============================
+// Registro de participantes
+// ===============================
+function mostrarFormularioRegistro(eventId) {
   registerSection.classList.remove("hidden");
-  document.getElementById("eventId").value = eventId;
+  registerForm.eventId.value = eventId;
   registerSection.scrollIntoView({ behavior: "smooth" });
 }
 
 cancelRegister.addEventListener("click", () => {
   registerSection.classList.add("hidden");
-  registerForm.reset();
 });
 
 registerForm.addEventListener("submit", async (e) => {
   e.preventDefault();
-
-  const formData = new FormData(registerForm);
-  const participantData = Object.fromEntries(formData.entries());
+  const registro = {
+    eventId: registerForm.eventId.value,
+    name: registerForm.name.value,
+    email: registerForm.email.value,
+  };
 
   try {
     const res = await fetch(`${API_URL}/participants`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(participantData),
+      body: JSON.stringify(registro),
     });
-
-    if (res.ok) {
-      alert("🎉 Participante registrado correctamente");
-      registerForm.reset();
-      registerSection.classList.add("hidden");
-    } else {
-      alert("❌ Error al registrar participante");
-    }
-  } catch (error) {
-    console.error("❌ Error registrando participante:", error);
+    if (!res.ok) throw new Error("Error al registrar participante");
+    alert("Participante registrado ✅");
+    registerForm.reset();
+    registerSection.classList.add("hidden");
+  } catch (err) {
+    console.error("❌ Error registrando participante:", err);
+    alert("Error al registrar participante. Intenta nuevamente.");
   }
 });
+
+// ===============================
+// Inicializar
+// ===============================
+cargarEventos();
