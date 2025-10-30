@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Gestor de Eventos</title>
+  <style>
+    /* Reset */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Poppins", sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #f9faff, #e3f2fd);
+      color: #333;
+      padding-top: 70px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* === NAVBAR === */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background: linear-gradient(90deg, #003b8e, #007bff);
+      color: white;
+      padding: 15px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      z-index: 10;
+    }
+
+    header h1 {
+      font-size: 1.6rem;
+      font-weight: 600;
+    }
+
+    nav a {
+      color: #fff;
+      text-decoration: none;
+      margin-left: 20px;
+      font-size: 1rem;
+      transition: 0.3s;
+    }
+
+    nav a:hover {
+      text-decoration: underline;
+    }
+
+    /* Animaciones */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Secciones */
+    #form-section, #list-section {
+      width: 90%;
+      max-width: 750px;
+      background: #fff;
+      border-radius: 15px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+      padding: 25px 30px;
+      margin-bottom: 30px;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    h2 {
+      color: #005bb5;
+      margin-bottom: 15px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    /* Inputs */
+    #event-form input,
+    #event-form textarea {
+      width: 100%;
+      padding: 10px 12px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      background-color: #fdfdfd;
+    }
+
+    /* Movimiento al hover */
+    #event-form input:hover,
+    #event-form textarea:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 10px rgba(0, 91, 181, 0.2);
+      background-color: #ffffff;
+    }
+
+    #event-form input:focus,
+    #event-form textarea:focus {
+      border-color: #ff6b81;
+      box-shadow: 0 0 8px rgba(255, 107, 129, 0.5);
+      outline: none;
+      transform: translateY(-3px);
+    }
+
+    #event-form button {
+      display: block;
+      width: 100%;
+      background: linear-gradient(90deg, #003b8e, #007bff);
+      color: #fff;
+      font-size: 1.1rem;
+      border: none;
+      padding: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.3s ease, background 0.3s ease;
+    }
+
+    #event-form button:hover {
+      background: linear-gradient(90deg, #007bff, #003b8e);
+      transform: scale(1.03);
+    }
+
+    /* === LISTA DE EVENTOS === */
+    #events-list {
+      list-style: none;
+    }
+
+    #events-list li {
+      background: #fdfdfd;
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      margin-bottom: 15px;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.4s ease;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      animation: fadeIn 0.8s ease-in-out;
+    }
+
+    #events-list li:hover {
+      transform: scale(1.02);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.1);
+    }
+
+    .info {
+      flex: 1;
+      margin-right: 10px;
+    }
+
+    .info .title {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #003b8e;
+      margin-bottom: 4px;
+    }
+
+    .info .meta {
+      font-size: 0.9rem;
+      color: #555;
+    }
+
+    /* Botones */
+    .actions button {
+      border: none;
+      border-radius: 8px;
+      padding: 6px 12px;
+      margin-left: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      color: #fff;
+    }
+
+    .actions .view { background-color: #007bff; }
+    .actions .register { background-color: #ff6b81; }
+    .actions .edit { background-color: #ffc107; }
+    .actions .delete { background-color: #dc3545; }
+
+    .actions button:hover {
+      transform: scale(1.07);
+      opacity: 0.9;
+    }
+
+    /* Botón flotante */
+    #add-event-btn {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: linear-gradient(90deg, #007bff, #003b8e);
+      color: white;
+      border: none;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      font-size: 2rem;
+      cursor: pointer;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+      transition: transform 0.3s ease;
+      z-index: 20;
+    }
+
+    #add-event-btn:hover {
+      transform: scale(1.1) rotate(90deg);
+    }
+
+    /* Footer */
+    footer {
+      width: 100%;
+      background: #003b8e;
+      color: white;
+      text-align: center;
+      padding: 15px 0;
+      margin-top: auto;
+      font-size: 0.9rem;
+      box-shadow: 0 -3px 10px rgba(0,0,0,0.15);
+    }
+
+
+
+    
+
+  </style>
+  <style>
+  .hidden {
+    display: none;
+  }
+  #register-section {
+    background: #1a1a1a;
+    color: white;
+    padding: 1em;
+    margin-top: 1em;
+    border-radius: 8px;
+  }
+  #register-form input {
+    display: block;
+    margin-bottom: 10px;
+    width: 100%;
+  }
+</style>
+
+</head>
+<body>
+
+  <header>
+    <h1>🎓 Gestor de Eventos</h1>
+    <nav>
+      <a href="#form-section">Nuevo Evento</a>
+      <a href="#list-section">Eventos</a>
+      <a href="#">Contacto</a>
+    </nav>
+  </header>
+
+  <section id="form-section">
+    <h2>Crear / Editar Evento</h2>
+    <form id="event-form">
+      <input name="title" placeholder="Título del evento" required />
+      <input name="date" type="date" required />
+      <input name="time" type="time" />
+      <input name="location" placeholder="Ubicación" />
+      <textarea name="description" placeholder="Descripción del evento..."></textarea>
+      <button type="submit">Guardar Evento</button>
+    </form>
+  </section>
+
+  <section id="list-section">
+    <h2>Eventos Disponibles</h2>
+    <ul id="events-list"></ul>
+  </section>
+
+  <template id="event-template">
+    <li>
+      <div class="info">
+        <strong class="title"></strong>
+        <div class="meta"></div>
+      </div>
+      <div class="actions">
+        <button class="view">Ver</button>
+        <button class="register">Inscribirse</button>
+        <button class="edit">Editar</button>
+        <button class="delete">Eliminar</button>
+      </div>
+    </li>
+  </template>
+
+  <!-- Botón flotante -->
+  <button id="add-event-btn" title="Crear nuevo evento">+</button>
+
+  <footer>
+    📅 Plataforma de Gestión de Eventos — HTML | CSS | JS | MongoDB  
+  </footer>
+
+  <script>
+    // Desplazamiento suave al formulario
+    document.getElementById('add-event-btn').addEventListener('click', () => {
+      document.getElementById('form-section').scrollIntoView({ behavior: 'smooth' });
+    });
+  </script>
+
+  <script src="main.js"></script>
+
+
+<!-- Formulario de registro de participante -->
+<section id="register-section" class="hidden">
+  <h2>Registro de Participante</h2>
+  <form id="register-form">
+    <input type="hidden" name="eventId" id="eventId">
+    <label>Nombre:</label>
+    <input type="text" name="name" id="name" required>
+    <label>Correo electrónico:</label>
+    <input type="email" name="email" id="email" required>
+    <button type="submit">Registrar</button>
+    <button type="button" id="cancel-register">Cancelar</button>
+  </form>
+</section>
+
+
+
+
+
+
+</body>
+</html>
