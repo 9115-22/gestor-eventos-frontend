@@ -1,83 +1,99 @@
-// 🔹 URL pública del backend en Render
-const API = 'https://gestor-eventos-backend-84mx.onrender.com/api';
+// main.js
 
-// ✅ Cargar eventos
-async function fetchEvents() {
+// URL de tu backend en Render
+const API_URL = "https://gestor-eventos-backend-84mx.onrender.com";
+
+// Elementos del DOM
+const eventForm = document.getElementById('event-form');
+const eventsList = document.getElementById('events-list');
+const eventTemplate = document.getElementById('event-template');
+
+// Función para cargar eventos desde el backend
+async function loadEvents() {
   try {
-    const res = await fetch(`${API}/events`);
+    const res = await fetch(`${API_URL}/api/events`);
     const events = await res.json();
-    localStorage.setItem('events_cache', JSON.stringify(events));
-    renderEvents(events);
-  } catch (e) {
-    const cached = localStorage.getItem('events_cache');
-    if (cached) renderEvents(JSON.parse(cached));
-    else console.error("Error al cargar eventos:", e);
+
+    eventsList.innerHTML = '';
+    events.forEach(event => {
+      const clone = eventTemplate.content.cloneNode(true);
+      clone.querySelector('.title').textContent = event.title;
+      clone.querySelector('.meta').textContent = `${event.date} ${event.time || ''} - ${event.location || ''}`;
+      
+      // Botones
+      clone.querySelector('.view').addEventListener('click', () => alert(JSON.stringify(event)));
+      clone.querySelector('.register').addEventListener('click', () => registerParticipant(event._id));
+      clone.querySelector('.edit').addEventListener('click', () => editEvent(event));
+      clone.querySelector('.delete').addEventListener('click', () => deleteEvent(event._id));
+
+      eventsList.appendChild(clone);
+    });
+  } catch (err) {
+    console.error('Error al cargar eventos:', err);
   }
 }
 
-// ✅ Mostrar eventos
-function renderEvents(events) {
-  const ul = document.getElementById('events-list');
-  ul.innerHTML = '';
-  events.forEach(ev => {
-    const li = document.createElement('li');
-    li.innerHTML = `
-      <strong>${ev.title}</strong>
-      <div>${new Date(ev.date).toLocaleDateString()} ${ev.time || ''} - ${ev.location || ''}</div>
-      <p>${ev.description || ''}</p>
-      <div>
-        <button onclick="viewEvent('${ev._id}')">Ver</button>
-        <button onclick="showRegister('${ev._id}')">Inscribirse</button>
-        <button onclick="editEvent('${ev._id}')">Editar</button>
-        <button onclick="deleteEvent('${ev._id}')">Eliminar</button>
-      </div>
-    `;
-    ul.appendChild(li);
-  });
-}
-
-// ✅ Crear o editar evento
-document.getElementById('event-form').addEventListener('submit', async (e) => {
+// Guardar nuevo evento
+eventForm.addEventListener('submit', async e => {
   e.preventDefault();
-  const data = Object.fromEntries(new FormData(e.target));
-  const method = e.target.dataset.editing ? 'PUT' : 'POST';
-  const url = e.target.dataset.editing
-    ? `${API}/events/${e.target.dataset.id}`
-    : `${API}/events`;
+  const formData = new FormData(eventForm);
+  const eventData = Object.fromEntries(formData.entries());
 
-  await fetch(url, {
-    method,
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  });
-
-  e.target.reset();
-  e.target.dataset.editing = '';
-  e.target.dataset.id = '';
-  fetchEvents();
-  alert('✅ Evento guardado correctamente.');
+  try {
+    await fetch(`${API_URL}/api/events`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(eventData)
+    });
+    eventForm.reset();
+    loadEvents();
+  } catch (err) {
+    console.error('Error al guardar evento:', err);
+  }
 });
 
-// ✅ Editar evento (rellenar formulario)
-async function editEvent(id) {
-  const res = await fetch(`${API}/events/${id}`);
-  const ev = await res.json();
-  const form = document.getElementById('event-form');
-  form.title.value = ev.title;
-  form.date.value = ev.date.split('T')[0];
-  form.time.value = ev.time || '';
-  form.location.value = ev.location || '';
-  form.description.value = ev.description || '';
-  form.dataset.editing = true;
-  form.dataset.id = id;
+// Editar evento
+async function editEvent(event) {
+  const newTitle = prompt('Editar título del evento', event.title);
+  if (!newTitle) return;
+
+  try {
+    await fetch(`${API_URL}/api/events/${event._id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: newTitle })
+    });
+    loadEvents();
+  } catch (err) {
+    console.error('Error al editar evento:', err);
+  }
 }
 
-// ✅ Eliminar evento
+// Eliminar evento
 async function deleteEvent(id) {
-  if (!confirm('¿Seguro que deseas eliminar este evento?')) return;
-  await fetch(`${API}/events/${id}`, { method: 'DELETE' });
-  fetchEvents();
+  if (!confirm('¿Eliminar este evento?')) return;
+  try {
+    await fetch(`${API_URL}/api/events/${id}`, { method: 'DELETE' });
+    loadEvents();
+  } catch (err) {
+    console.error('Error al eliminar evento:', err);
+  }
 }
 
-// ✅ Inicializar
-fetchEvents();
+// Registrar participante (ejemplo simple)
+function registerParticipant(eventId) {
+  const name = prompt('Nombre del participante');
+  const email = prompt('Correo del participante');
+  if (!name || !email) return;
+
+  fetch(`${API_URL}/api/participants`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ eventId, name, email })
+  })
+  .then(() => alert('Participante registrado!'))
+  .catch(err => console.error('Error al registrar participante:', err));
+}
+
+// Inicializar
+loadEvents();
