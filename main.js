@@ -1,7 +1,9 @@
 // ===============================
 // main.js - Gestor de Eventos
 // ===============================
-const API_URL = "https://gestor-eventos-backend-84mx.onrender.com/api";
+
+const EVENTS_API = "https://gestor-eventos-backend-84mx.onrender.com/api/events";
+const PARTICIPANTS_API = "https://gestor-eventos-backend-84mx.onrender.com/api/participants";
 
 // Referencias DOM
 const form = document.getElementById("event-form");
@@ -18,7 +20,7 @@ let editId = null;
 // ===============================
 async function cargarEventos() {
   try {
-    const res = await fetch(`${API_URL}/events`);
+    const res = await fetch(EVENTS_API);
     if (!res.ok) throw new Error("Error al obtener eventos");
     const eventos = await res.json();
     renderEventos(eventos);
@@ -35,7 +37,7 @@ function renderEventos(eventos) {
   eventos.forEach(ev => {
     const li = template.content.cloneNode(true);
     li.querySelector(".title").textContent = ev.title;
-    li.querySelector(".meta").textContent = `${ev.date?.split("T")[0]} | ${ev.location}`;
+    li.querySelector(".meta").textContent = `${new Date(ev.date).toLocaleDateString()} | ${ev.location}`;
     li.querySelector(".view").onclick = () => alert(ev.description);
     li.querySelector(".register").onclick = () => mostrarFormularioRegistro(ev._id);
     li.querySelector(".edit").onclick = () => editarEvento(ev);
@@ -45,7 +47,7 @@ function renderEventos(eventos) {
 }
 
 // ===============================
-// Guardar evento (crear o editar)
+// Guardar evento
 // ===============================
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -59,7 +61,7 @@ form.addEventListener("submit", async (e) => {
 
   try {
     const method = editId ? "PUT" : "POST";
-    const url = editId ? `${API_URL}/events/${editId}` : `${API_URL}/events`;
+    const url = editId ? `${EVENTS_API}/${editId}` : EVENTS_API;
 
     const res = await fetch(url, {
       method,
@@ -97,7 +99,7 @@ function editarEvento(ev) {
 async function eliminarEvento(id) {
   if (!confirm("¿Eliminar este evento?")) return;
   try {
-    const res = await fetch(`${API_URL}/events/${id}`, { method: "DELETE" });
+    const res = await fetch(`${EVENTS_API}/${id}`, { method: "DELETE" });
     if (!res.ok) throw new Error("Error al eliminar");
     alert("Evento eliminado ✅");
     cargarEventos();
@@ -122,13 +124,13 @@ cancelRegister.addEventListener("click", () => {
 registerForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const registro = {
-    eventId: registerForm.eventId.value,
+    event: registerForm.eventId.value,
     name: registerForm.name.value,
     email: registerForm.email.value,
   };
 
   try {
-    const res = await fetch(`${API_URL}/participants`, {
+    const res = await fetch(PARTICIPANTS_API, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(registro),
