@@ -62,7 +62,6 @@
     </nav>
   </header>
 
-  <!-- Formulario Crear/Editar Evento -->
   <section id="form-section">
     <h2>Crear / Editar Evento</h2>
     <form id="event-form">
@@ -75,13 +74,11 @@
     </form>
   </section>
 
-  <!-- Lista de eventos -->
   <section id="list-section">
     <h2>Eventos Disponibles</h2>
     <ul id="events-list"></ul>
   </section>
 
-  <!-- Template para eventos -->
   <template id="event-template">
     <li>
       <div class="info">
@@ -97,10 +94,8 @@
     </li>
   </template>
 
-  <!-- Botón flotante -->
   <button id="add-event-btn" title="Crear nuevo evento">+</button>
 
-  <!-- Formulario registro de participante -->
   <section id="register-section" class="hidden">
     <h2>Registro de Participante</h2>
     <form id="register-form">
@@ -120,16 +115,21 @@
 
   <!-- Scripts -->
   <script>
-    // Desplazamiento suave al formulario
-    const addBtn = document.getElementById('add-event-btn');
-    const formSection = document.getElementById('form-section');
-    if (addBtn && formSection) {
-      addBtn.addEventListener('click', () => {
-        formSection.scrollIntoView({ behavior: 'smooth' });
-      });
-    }
+    document.addEventListener('DOMContentLoaded', () => {
+      const addBtn = document.getElementById('add-event-btn');
+      const formSection = document.getElementById('form-section');
+      if (addBtn && formSection) {
+        addBtn.addEventListener('click', () => {
+          formSection.scrollIntoView({ behavior: 'smooth' });
+        });
+      }
+
+      // Cargar main.js dinámicamente
+      const script = document.createElement('script');
+      script.src = 'main.js';
+      document.body.appendChild(script);
+    });
   </script>
 
-  <script src="main.js"></script>
 </body>
 </html>
