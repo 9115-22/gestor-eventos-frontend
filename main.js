@@ -2,8 +2,9 @@
 // main.js - Gestor de Eventos
 // ===============================
 
-const EVENTS_API = "https://gestor-eventos-backend-84mx.onrender.com/api/events";
-const PARTICIPANTS_API = "https://gestor-eventos-backend-84mx.onrender.com/api/participants";
+// URLs del backend en Render
+const API_URL_EVENTS = "https://gestor-eventos-backend-84mx.onrender.com/api/events";
+const API_URL_PARTICIPANTS = "https://gestor-eventos-backend-84mx.onrender.com/api/participants";
 
 // Referencias DOM
 const form = document.getElementById("event-form");
@@ -12,6 +13,7 @@ const template = document.getElementById("event-template");
 const registerSection = document.getElementById("register-section");
 const registerForm = document.getElementById("register-form");
 const cancelRegister = document.getElementById("cancel-register");
+const addEventBtn = document.getElementById("add-event-btn");
 
 let editId = null;
 
@@ -20,7 +22,7 @@ let editId = null;
 // ===============================
 async function cargarEventos() {
   try {
-    const res = await fetch(EVENTS_API);
+    const res = await fetch(API_URL_EVENTS);
     if (!res.ok) throw new Error("Error al obtener eventos");
     const eventos = await res.json();
     renderEventos(eventos);
@@ -33,13 +35,12 @@ async function cargarEventos() {
 // Renderizar eventos
 // ===============================
 function renderEventos(eventos) {
-  if (!list || !template) return;
   list.innerHTML = "";
   eventos.forEach(ev => {
     const li = template.content.cloneNode(true);
     li.querySelector(".title").textContent = ev.title;
-    li.querySelector(".meta").textContent = `${new Date(ev.date).toLocaleDateString()} | ${ev.location}`;
-    li.querySelector(".view").onclick = () => alert(ev.description);
+    li.querySelector(".meta").textContent = `${ev.date?.split("T")[0]} | ${ev.location || "Sin ubicación"}`;
+    li.querySelector(".view").onclick = () => alert(ev.description || "Sin descripción");
     li.querySelector(".register").onclick = () => mostrarFormularioRegistro(ev._id);
     li.querySelector(".edit").onclick = () => editarEvento(ev);
     li.querySelector(".delete").onclick = () => eliminarEvento(ev._id);
@@ -48,7 +49,7 @@ function renderEventos(eventos) {
 }
 
 // ===============================
-// Guardar evento
+// Guardar evento (crear o editar)
 // ===============================
 if (form) {
   form.addEventListener("submit", async (e) => {
@@ -63,7 +64,7 @@ if (form) {
 
     try {
       const method = editId ? "PUT" : "POST";
-      const url = editId ? `${EVENTS_API}/${editId}` : EVENTS_API;
+      const url = editId ? `${API_URL_EVENTS}/${editId}` : API_URL_EVENTS;
 
       const res = await fetch(url, {
         method,
@@ -87,13 +88,12 @@ if (form) {
 // Editar evento
 // ===============================
 function editarEvento(ev) {
-  if (!form) return;
   editId = ev._id;
   form.title.value = ev.title;
   form.date.value = ev.date.split("T")[0];
   form.time.value = ev.time || "";
-  form.location.value = ev.location;
-  form.description.value = ev.description;
+  form.location.value = ev.location || "";
+  form.description.value = ev.description || "";
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -103,7 +103,7 @@ function editarEvento(ev) {
 async function eliminarEvento(id) {
   if (!confirm("¿Eliminar este evento?")) return;
   try {
-    const res = await fetch(`${EVENTS_API}/${id}`, { method: "DELETE" });
+    const res = await fetch(`${API_URL_EVENTS}/${id}`, { method: "DELETE" });
     if (!res.ok) throw new Error("Error al eliminar");
     alert("Evento eliminado ✅");
     cargarEventos();
@@ -124,7 +124,7 @@ function mostrarFormularioRegistro(eventId) {
 
 if (cancelRegister) {
   cancelRegister.addEventListener("click", () => {
-    if (registerSection) registerSection.classList.add("hidden");
+    registerSection.classList.add("hidden");
   });
 }
 
@@ -134,11 +134,11 @@ if (registerForm) {
     const registro = {
       event: registerForm.eventId.value,
       name: registerForm.name.value,
-      email: registerForm.email.value
+      email: registerForm.email.value,
     };
 
     try {
-      const res = await fetch(PARTICIPANTS_API, {
+      const res = await fetch(API_URL_PARTICIPANTS, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(registro),
@@ -146,11 +146,20 @@ if (registerForm) {
       if (!res.ok) throw new Error("Error al registrar participante");
       alert("Participante registrado ✅");
       registerForm.reset();
-      if (registerSection) registerSection.classList.add("hidden");
+      registerSection.classList.add("hidden");
     } catch (err) {
       console.error("❌ Error registrando participante:", err);
       alert("Error al registrar participante. Intenta nuevamente.");
     }
+  });
+}
+
+// ===============================
+// Botón flotante
+// ===============================
+if (addEventBtn) {
+  addEventBtn.addEventListener("click", () => {
+    document.getElementById('form-section').scrollIntoView({ behavior: 'smooth' });
   });
 }
 
