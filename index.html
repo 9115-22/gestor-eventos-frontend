@@ -47,8 +47,64 @@
     footer { width:100%; background:#003b8e; color:white; text-align:center; padding:15px 0; margin-top:auto; font-size:0.9rem; box-shadow:0 -3px 10px rgba(0,0,0,0.15); }
 
     .hidden { display:none; }
-    #register-section { background:#1a1a1a; color:white; padding:1em; margin-top:1em; border-radius:8px; }
-    #register-form input { display:block; margin-bottom:10px; width:100%; }
+    
+    /* Estilos para la sección de registro */
+    #register-section { 
+      width:90%; 
+      max-width:750px; 
+      background:#fff; 
+      border-radius:15px; 
+      box-shadow:0 6px 15px rgba(0,0,0,0.1); 
+      padding:25px 30px; 
+      margin-bottom:30px; 
+      border: 2px solid #007bff;
+    }
+    
+    #register-form input { 
+      display:block; 
+      margin-bottom:10px; 
+      width:100%; 
+      padding:10px 12px;
+      border:1px solid #ccc;
+      border-radius:8px;
+      font-size:1rem;
+    }
+    
+    #register-form button {
+      padding: 8px 16px;
+      margin: 5px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      color: white;
+    }
+    
+    #register-form button[type="submit"] {
+      background: #28a745;
+    }
+    
+    #register-form button[type="button"] {
+      background: #6c757d;
+    }
+
+    /* Estilos para mensajes de error */
+    .error-message {
+      background: #fee;
+      border: 1px solid #fcc;
+      color: #c00;
+      padding: 10px;
+      border-radius: 8px;
+      margin: 10px 0;
+      text-align: center;
+      display: none;
+    }
+
+    .loading {
+      text-align: center;
+      color: #666;
+      font-style: italic;
+      padding: 20px;
+    }
   </style>
 </head>
 <body>
@@ -64,6 +120,8 @@
 
   <section id="form-section">
     <h2>Crear / Editar Evento</h2>
+    <!-- Contenedor para errores -->
+    <div id="error-message" class="error-message"></div>
     <form id="event-form">
       <input name="title" placeholder="Título del evento" required />
       <input name="date" type="date" required />
@@ -76,7 +134,9 @@
 
   <section id="list-section">
     <h2>Eventos Disponibles</h2>
-    <ul id="events-list"></ul>
+    <ul id="events-list">
+      <div class="loading">Cargando eventos...</div>
+    </ul>
   </section>
 
   <template id="event-template">
@@ -99,11 +159,11 @@
   <section id="register-section" class="hidden">
     <h2>Registro de Participante</h2>
     <form id="register-form">
-      <input type="hidden" name="eventId" id="eventId">
+      <input type="hidden" name="eventId">
       <label>Nombre:</label>
-      <input type="text" name="name" id="name" required>
+      <input type="text" name="name" required>
       <label>Correo electrónico:</label>
-      <input type="email" name="email" id="email" required>
+      <input type="email" name="email" required>
       <button type="submit">Registrar</button>
       <button type="button" id="cancel-register">Cancelar</button>
     </form>
@@ -113,23 +173,8 @@
     📅 Plataforma de Gestión de Eventos — HTML | CSS | JS | MongoDB
   </footer>
 
-  <!-- Scripts -->
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const addBtn = document.getElementById('add-event-btn');
-      const formSection = document.getElementById('form-section');
-      if (addBtn && formSection) {
-        addBtn.addEventListener('click', () => {
-          formSection.scrollIntoView({ behavior: 'smooth' });
-        });
-      }
-
-      // Cargar main.js dinámicamente
-      const script = document.createElement('script');
-      script.src = 'main.js';
-      document.body.appendChild(script);
-    });
-  </script>
+  <!-- Script principal -->
+  <script src="main.js"></script>
 
 </body>
 </html>
